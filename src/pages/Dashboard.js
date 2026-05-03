@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API_URL from "./api";
 
 function Dashboard() {
   const [balance, setBalance] = useState(0);
@@ -7,7 +8,6 @@ function Dashboard() {
   const [transferAmount, setTransferAmount] = useState("");
   const [transferTo, setTransferTo] = useState("");
   const [transactions, setTransactions] = useState([]);
-  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -33,13 +33,13 @@ function Dashboard() {
   };
 
   const fetchBalance = async () => {
-    const res = await fetch(`http://localhost:8080/user/balance?username=${username}`);
+    const res = await fetch(`${API_URL}/api/user/balance?username=${username}`);
     const data = await res.json();
     setBalance(data?.data ?? 0);
   };
 
   const fetchTransactions = async () => {
-    const res = await fetch(`http://localhost:8080/user/transactions?username=${username}`);
+    const res = await fetch(`${API_URL}/api/user/transactions?username=${username}`);
     const data = await res.json();
     const list = Array.isArray(data?.data) ? data.data : [];
     setTransactions(list.slice(-5).reverse());
@@ -48,44 +48,50 @@ function Dashboard() {
   const deposit = async () => {
     if (!amount) return;
     setActionLoading(true);
-    await fetch("http://localhost:8080/user/deposit", {
+
+    await fetch(`${API_URL}/api/user/deposit`, {
       method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ username, amount: Number(amount) })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, amount: Number(amount) }),
     });
+
     setAmount("");
-    loadData();
+    await loadData();
     setActionLoading(false);
   };
 
   const withdraw = async () => {
     if (!amount) return;
     setActionLoading(true);
-    await fetch("http://localhost:8080/user/withdraw", {
+
+    await fetch(`${API_URL}/api/user/withdraw`, {
       method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ username, amount: Number(amount) })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, amount: Number(amount) }),
     });
+
     setAmount("");
-    loadData();
+    await loadData();
     setActionLoading(false);
   };
 
   const transfer = async () => {
     if (!transferAmount || !transferTo) return;
     setActionLoading(true);
-    await fetch("http://localhost:8080/user/transfer", {
+
+    await fetch(`${API_URL}/api/user/transfer`, {
       method: "POST",
-      headers: {"Content-Type":"application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sender: username,
         receiver: transferTo,
-        amount: Number(transferAmount)
-      })
+        amount: Number(transferAmount),
+      }),
     });
+
     setTransferAmount("");
     setTransferTo("");
-    loadData();
+    await loadData();
     setActionLoading(false);
   };
 
@@ -101,75 +107,65 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 p-6 text-white">
 
-      {/* HEADER */}
       <div className="flex justify-between items-center mb-10">
-        <h1 className="text-4xl font-bold tracking-wide">🏦 Bankify</h1>
+        <h1 className="text-4xl font-bold">🏦 Bankify</h1>
 
         <div className="flex gap-3">
           {role === "admin" && (
             <button onClick={() => navigate("/admin")}
-              className="bg-white/10 backdrop-blur px-4 py-2 rounded-xl hover:bg-white/20">
+              className="bg-white/10 px-4 py-2 rounded-xl">
               Admin
             </button>
           )}
 
           <button onClick={() => navigate("/transactions")}
-            className="bg-indigo-500 px-4 py-2 rounded-xl hover:bg-indigo-600">
+            className="bg-indigo-500 px-4 py-2 rounded-xl">
             Transactions
           </button>
 
           <button onClick={logout}
-            className="bg-red-500 px-4 py-2 rounded-xl hover:bg-red-600">
+            className="bg-red-500 px-4 py-2 rounded-xl">
             Logout
           </button>
         </div>
       </div>
 
-      {/* BALANCE CARD */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-8 rounded-3xl shadow-2xl mb-8 transform hover:scale-[1.02] transition">
-        <p className="opacity-80">Welcome back</p>
-        <h2 className="text-xl">{username}</h2>
-
-        <h1 className="text-6xl font-bold mt-4">₹ {balance}</h1>
-        <p className="opacity-80 mt-2">Available Balance</p>
+      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-8 rounded-3xl mb-8">
+        <p>Welcome back</p>
+        <h2>{username}</h2>
+        <h1 className="text-5xl mt-4">₹ {balance}</h1>
       </div>
 
-      {/* ACTIONS */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
 
-        <div className="bg-white/10 backdrop-blur p-6 rounded-2xl shadow-lg">
-          <h3 className="mb-4 font-semibold">Quick Actions</h3>
-
+        <div className="bg-white/10 p-6 rounded-2xl">
           <input
             type="number"
             placeholder="Amount"
             value={amount}
             onChange={(e)=>setAmount(e.target.value)}
-            className="w-full p-3 rounded-lg text-black mb-4"
+            className="w-full p-3 rounded text-black mb-4"
           />
 
           <div className="flex gap-4">
             <button onClick={deposit}
-              className="flex-1 bg-green-500 py-2 rounded-lg hover:scale-105 transition">
+              className="flex-1 bg-green-500 py-2 rounded">
               Deposit
             </button>
 
             <button onClick={withdraw}
-              className="flex-1 bg-yellow-500 py-2 rounded-lg hover:scale-105 transition">
+              className="flex-1 bg-yellow-500 py-2 rounded">
               Withdraw
             </button>
           </div>
         </div>
 
-        {/* TRANSFER */}
-        <div className="bg-white/10 backdrop-blur p-6 rounded-2xl shadow-lg">
-          <h3 className="mb-4 font-semibold">Transfer</h3>
-
+        <div className="bg-white/10 p-6 rounded-2xl">
           <input
             placeholder="Receiver"
             value={transferTo}
             onChange={(e)=>setTransferTo(e.target.value)}
-            className="w-full p-3 rounded-lg text-black mb-3"
+            className="w-full p-3 rounded text-black mb-3"
           />
 
           <input
@@ -177,45 +173,26 @@ function Dashboard() {
             placeholder="Amount"
             value={transferAmount}
             onChange={(e)=>setTransferAmount(e.target.value)}
-            className="w-full p-3 rounded-lg text-black mb-3"
+            className="w-full p-3 rounded text-black mb-3"
           />
 
           <button onClick={transfer}
-            className="w-full bg-indigo-500 py-2 rounded-lg hover:scale-105 transition">
+            className="w-full bg-indigo-500 py-2 rounded">
             Send Money
           </button>
         </div>
       </div>
 
-      {/* TRANSACTIONS */}
-      <div className="bg-white/10 backdrop-blur p-6 rounded-2xl shadow-lg">
-        <div className="flex justify-between mb-4">
-          <h3 className="font-semibold">Recent Transactions</h3>
-          <button onClick={()=>navigate("/transactions")}
-            className="text-indigo-300 hover:underline">
-            View All →
-          </button>
-        </div>
+      <div className="bg-white/10 p-6 rounded-2xl">
+        <h3 className="mb-4">Recent Transactions</h3>
 
-        <div className="space-y-3">
-          {transactions.map((t,i)=>(
-            <div key={i}
-              className="flex justify-between p-4 bg-white/10 rounded-lg hover:bg-white/20 transition">
-              <div>
-                <p className="font-semibold">{t.type}</p>
-                <p className="text-sm opacity-70">
-                  {new Date(t.timestamp).toLocaleString()}
-                </p>
-              </div>
-              <p className="font-bold text-lg">₹{t.amount}</p>
-            </div>
-          ))}
-        </div>
+        {transactions.map((t,i)=>(
+          <div key={i} className="flex justify-between mb-2">
+            <span>{t.type}</span>
+            <span>₹{t.amount}</span>
+          </div>
+        ))}
       </div>
-
-      {message && (
-        <p className="text-center mt-6 text-green-400">{message}</p>
-      )}
     </div>
   );
 }
