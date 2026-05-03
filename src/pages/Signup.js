@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = "https://banking-app-production-54bc.up.railway.app";
+
 function Signup() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -15,8 +17,12 @@ function Signup() {
     setMessage("");
     setError("");
 
+    if (!username || !password) {
+      return setError("Please fill all fields");
+    }
+
     try {
-      const res = await fetch("http://localhost:8080/auth/register", {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -24,16 +30,26 @@ function Signup() {
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setMessage("Account created successfully!");
-        setTimeout(() => navigate("/"), 1500);
-      } else {
-        setError(data.message || "Signup failed");
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Invalid server response");
       }
+
+      console.log("SIGNUP RESPONSE:", data);
+
+      if (!res.ok) {
+        throw new Error(data?.message || "Signup failed");
+      }
+
+      setMessage("Account created successfully!");
+
+      setTimeout(() => navigate("/"), 1200);
+
     } catch (err) {
-      setError("Server error");
+      console.error("SIGNUP ERROR:", err);
+      setError(err.message || "Server error");
     }
   };
 

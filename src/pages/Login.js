@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
+const API_URL = "https://banking-app-production-54bc.up.railway.app";
+
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -18,19 +20,15 @@ function Login() {
       setLoading(true);
       setError("");
 
-      // 🔥 FIXED BACKEND URL
-      const res = await fetch(
-        "https://banking-app-production-54bc.up.railway.app/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ username, password }),
-        }
-      );
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
-      let data = null;
+      let data;
       try {
         data = await res.json();
       } catch {
@@ -39,11 +37,11 @@ function Login() {
 
       console.log("LOGIN RESPONSE:", data);
 
-      if (!res.ok || !data || !data.data) {
+      if (!res.ok || !data?.data) {
         throw new Error(data?.message || "Invalid username or password");
       }
 
-      // 🔥 CLEAR OLD SESSION
+      // Clear old session
       localStorage.clear();
 
       const user = data.data;
@@ -58,9 +56,7 @@ function Login() {
         role: localStorage.getItem("role"),
       });
 
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 100);
+      navigate("/dashboard");
 
     } catch (err) {
       console.error("LOGIN ERROR:", err);
