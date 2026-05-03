@@ -8,8 +8,8 @@ function Transactions() {
   const navigate = useNavigate();
   const username = localStorage.getItem("username");
 
-  // ✅ IMPORTANT: replace with your actual Railway backend URL
-  const BASE_URL = "https://your-app-name.up.railway.app";
+  // ✅ PUT YOUR REAL RAILWAY URL HERE
+  const BASE_URL = "https://banking-app-production.up.railway.app"; // 🔥 replace
 
   useEffect(() => {
     if (!username) {
@@ -24,11 +24,11 @@ function Transactions() {
     try {
       setLoading(true);
 
-      const res = await fetch(
-        `${BASE_URL}/api/user/transactions?username=${username}`
-      );
+      const url = `${BASE_URL}/api/user/transactions?username=${username}`;
+      console.log("Calling:", url); // ✅ debug
 
-      // 🔥 handle backend errors properly
+      const res = await fetch(url);
+
       if (!res.ok) {
         console.error("API Error:", res.status);
         setTransactions([]);
@@ -39,10 +39,8 @@ function Transactions() {
 
       console.log("Transactions API:", data);
 
-      // ✅ correct extraction from ApiResponse
       const list = Array.isArray(data?.data) ? data.data : [];
 
-      // ✅ latest first (without mutating original)
       setTransactions([...list].reverse());
 
     } catch (err) {
@@ -70,7 +68,6 @@ function Transactions() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-indigo-100 p-6">
       
-      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">📜 All Transactions</h1>
 
@@ -82,7 +79,6 @@ function Transactions() {
         </button>
       </div>
 
-      {/* EMPTY STATE */}
       {transactions.length === 0 ? (
         <p className="text-center text-gray-500 mt-10">
           No transactions found
@@ -95,24 +91,20 @@ function Transactions() {
               key={i}
               className="bg-white p-5 rounded-2xl shadow-md hover:shadow-xl transition"
             >
-              {/* TYPE */}
               <h3 className={`font-semibold text-lg ${getColor(t.type)}`}>
                 {t.type}
               </h3>
 
-              {/* AMOUNT */}
               <p className="text-xl font-bold mt-2">
                 ₹ {t.amount}
               </p>
 
-              {/* TRANSFER DETAILS */}
               {(t.sender || t.receiver) && (
                 <p className="text-sm text-gray-500 mt-1">
                   {t.sender || "System"} → {t.receiver || "System"}
                 </p>
               )}
 
-              {/* TIME */}
               <p className="text-xs text-gray-400 mt-2">
                 {new Date(t.timestamp).toLocaleString()}
               </p>
