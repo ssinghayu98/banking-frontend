@@ -8,8 +8,8 @@ function Transactions() {
   const navigate = useNavigate();
   const username = localStorage.getItem("username");
 
-  // ✅ PUT YOUR REAL RAILWAY URL HERE
-  const BASE_URL = "https://banking-app-production.up.railway.app"; // 🔥 replace
+  // ✅ CONFIRMED backend URL (make sure this is EXACT from Railway)
+  const BASE_URL = "https://banking-app-production.up.railway.app";
 
   useEffect(() => {
     if (!username) {
@@ -25,26 +25,27 @@ function Transactions() {
       setLoading(true);
 
       const url = `${BASE_URL}/api/user/transactions?username=${username}`;
-      console.log("Calling:", url); // ✅ debug
+      console.log("🚀 Calling API:", url);
 
       const res = await fetch(url);
 
+      // 🔥 show full error clearly
       if (!res.ok) {
-        console.error("API Error:", res.status);
+        const text = await res.text();
+        console.error("❌ API ERROR:", res.status, text);
         setTransactions([]);
         return;
       }
 
       const data = await res.json();
-
-      console.log("Transactions API:", data);
+      console.log("✅ API RESPONSE:", data);
 
       const list = Array.isArray(data?.data) ? data.data : [];
 
       setTransactions([...list].reverse());
 
     } catch (err) {
-      console.error("Fetch error:", err);
+      console.error("❌ FETCH ERROR:", err);
       setTransactions([]);
     } finally {
       setLoading(false);
@@ -105,8 +106,11 @@ function Transactions() {
                 </p>
               )}
 
+              {/* ✅ SAFE timestamp */}
               <p className="text-xs text-gray-400 mt-2">
-                {new Date(t.timestamp).toLocaleString()}
+                {t.timestamp
+                  ? new Date(t.timestamp).toLocaleString()
+                  : "No time"}
               </p>
             </div>
           ))}
