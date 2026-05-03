@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API_URL from "api";
+import API_URL from "../api"; // ✅ FIXED
 
 function Dashboard() {
   const [balance, setBalance] = useState(0);
@@ -33,66 +33,126 @@ function Dashboard() {
   };
 
   const fetchBalance = async () => {
-    const res = await fetch(`${API_URL}/api/user/balance?username=${username}`);
-    const data = await res.json();
-    setBalance(data?.data ?? 0);
+    try {
+      const res = await fetch(`${API_URL}/api/user/balance?username=${username}`);
+      const data = await res.json();
+      setBalance(data?.data ?? 0);
+    } catch (err) {
+      console.error("Balance error:", err);
+    }
   };
 
   const fetchTransactions = async () => {
-    const res = await fetch(`${API_URL}/api/user/transactions?username=${username}`);
-    const data = await res.json();
-    const list = Array.isArray(data?.data) ? data.data : [];
-    setTransactions(list.slice(-5).reverse());
+    try {
+      const res = await fetch(`${API_URL}/api/user/transactions?username=${username}`);
+      const data = await res.json();
+      const list = Array.isArray(data?.data) ? data.data : [];
+      setTransactions(list.slice(-5).reverse());
+    } catch (err) {
+      console.error("Transaction error:", err);
+    }
   };
 
   const deposit = async () => {
     if (!amount) return;
+
     setActionLoading(true);
 
-    await fetch(`${API_URL}/api/user/deposit`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, amount: Number(amount) }),
-    });
+    try {
+      const res = await fetch(`${API_URL}/api/user/deposit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username, // ✅ IMPORTANT
+          amount: Number(amount),
+        }),
+      });
 
-    setAmount("");
-    await loadData();
-    setActionLoading(false);
+      const data = await res.json();
+
+      console.log("DEPOSIT RESPONSE:", data);
+
+      if (!res.ok) {
+        throw new Error(data?.message || "Deposit failed");
+      }
+
+      setAmount("");
+      await loadData();
+
+    } catch (err) {
+      console.error("Deposit error:", err);
+      alert(err.message);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const withdraw = async () => {
     if (!amount) return;
+
     setActionLoading(true);
 
-    await fetch(`${API_URL}/api/user/withdraw`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, amount: Number(amount) }),
-    });
+    try {
+      const res = await fetch(`${API_URL}/api/user/withdraw`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          amount: Number(amount),
+        }),
+      });
 
-    setAmount("");
-    await loadData();
-    setActionLoading(false);
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data?.message);
+
+      setAmount("");
+      await loadData();
+
+    } catch (err) {
+      console.error("Withdraw error:", err);
+      alert(err.message);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const transfer = async () => {
     if (!transferAmount || !transferTo) return;
+
     setActionLoading(true);
 
-    await fetch(`${API_URL}/api/user/transfer`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sender: username,
-        receiver: transferTo,
-        amount: Number(transferAmount),
-      }),
-    });
+    try {
+      const res = await fetch(`${API_URL}/api/user/transfer`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sender: username,
+          receiver: transferTo,
+          amount: Number(transferAmount),
+        }),
+      });
 
-    setTransferAmount("");
-    setTransferTo("");
-    await loadData();
-    setActionLoading(false);
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data?.message);
+
+      setTransferAmount("");
+      setTransferTo("");
+      await loadData();
+
+    } catch (err) {
+      console.error("Transfer error:", err);
+      alert(err.message);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const logout = () => {
@@ -101,7 +161,11 @@ function Dashboard() {
   };
 
   if (loading) {
-    return <div className="h-screen flex items-center justify-center text-xl">Loading...</div>;
+    return (
+      <div className="h-screen flex items-center justify-center text-xl">
+        Loading...
+      </div>
+    );
   }
 
   return (
@@ -143,7 +207,7 @@ function Dashboard() {
             type="number"
             placeholder="Amount"
             value={amount}
-            onChange={(e)=>setAmount(e.target.value)}
+            onChange={(e) => setAmount(e.target.value)}
             className="w-full p-3 rounded text-black mb-4"
           />
 
@@ -164,7 +228,7 @@ function Dashboard() {
           <input
             placeholder="Receiver"
             value={transferTo}
-            onChange={(e)=>setTransferTo(e.target.value)}
+            onChange={(e) => setTransferTo(e.target.value)}
             className="w-full p-3 rounded text-black mb-3"
           />
 
@@ -172,7 +236,7 @@ function Dashboard() {
             type="number"
             placeholder="Amount"
             value={transferAmount}
-            onChange={(e)=>setTransferAmount(e.target.value)}
+            onChange={(e) => setTransferAmount(e.target.value)}
             className="w-full p-3 rounded text-black mb-3"
           />
 
@@ -186,7 +250,7 @@ function Dashboard() {
       <div className="bg-white/10 p-6 rounded-2xl">
         <h3 className="mb-4">Recent Transactions</h3>
 
-        {transactions.map((t,i)=>(
+        {transactions.map((t, i) => (
           <div key={i} className="flex justify-between mb-2">
             <span>{t.type}</span>
             <span>₹{t.amount}</span>
