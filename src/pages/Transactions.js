@@ -8,8 +8,8 @@ function Transactions() {
   const navigate = useNavigate();
   const username = localStorage.getItem("username");
 
-  // 🔥 IMPORTANT: use deployed backend URL
-  const BASE_URL = "https://your-backend-url"; // ← replace with Railway URL
+  // ✅ IMPORTANT: replace with your actual Railway backend URL
+  const BASE_URL = "https://your-app-name.up.railway.app";
 
   useEffect(() => {
     if (!username) {
@@ -28,17 +28,25 @@ function Transactions() {
         `${BASE_URL}/api/user/transactions?username=${username}`
       );
 
+      // 🔥 handle backend errors properly
+      if (!res.ok) {
+        console.error("API Error:", res.status);
+        setTransactions([]);
+        return;
+      }
+
       const data = await res.json();
 
       console.log("Transactions API:", data);
 
+      // ✅ correct extraction from ApiResponse
       const list = Array.isArray(data?.data) ? data.data : [];
 
-      // latest first
-      setTransactions(list.reverse());
+      // ✅ latest first (without mutating original)
+      setTransactions([...list].reverse());
 
     } catch (err) {
-      console.error(err);
+      console.error("Fetch error:", err);
       setTransactions([]);
     } finally {
       setLoading(false);
@@ -61,7 +69,8 @@ function Transactions() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-indigo-100 p-6">
-
+      
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">📜 All Transactions</h1>
 
@@ -73,32 +82,37 @@ function Transactions() {
         </button>
       </div>
 
+      {/* EMPTY STATE */}
       {transactions.length === 0 ? (
         <p className="text-center text-gray-500 mt-10">
           No transactions found
         </p>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-
+          
           {transactions.map((t, i) => (
             <div
               key={i}
               className="bg-white p-5 rounded-2xl shadow-md hover:shadow-xl transition"
             >
+              {/* TYPE */}
               <h3 className={`font-semibold text-lg ${getColor(t.type)}`}>
                 {t.type}
               </h3>
 
+              {/* AMOUNT */}
               <p className="text-xl font-bold mt-2">
                 ₹ {t.amount}
               </p>
 
+              {/* TRANSFER DETAILS */}
               {(t.sender || t.receiver) && (
                 <p className="text-sm text-gray-500 mt-1">
                   {t.sender || "System"} → {t.receiver || "System"}
                 </p>
               )}
 
+              {/* TIME */}
               <p className="text-xs text-gray-400 mt-2">
                 {new Date(t.timestamp).toLocaleString()}
               </p>
