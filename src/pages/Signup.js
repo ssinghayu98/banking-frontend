@@ -27,7 +27,10 @@ function Signup() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({
+          username: username.trim(),
+          password,
+        }),
       });
 
       let data;
@@ -43,7 +46,9 @@ function Signup() {
         throw new Error(data?.message || "Signup failed");
       }
 
-      setMessage("Account created successfully!");
+      setMessage(data.message || "Account created successfully!");
+      setUsername("");
+      setPassword("");
 
       setTimeout(() => navigate("/"), 1200);
 
