@@ -8,8 +8,8 @@ function Transactions() {
   const navigate = useNavigate();
   const username = localStorage.getItem("username");
 
-  // ✅ CONFIRMED backend URL (make sure this is EXACT from Railway)
-  const BASE_URL = "https://banking-app-production.up.railway.app";
+  // ✅ FINAL CORRECT BACKEND URL (FROM YOUR RAILWAY)
+  const BASE_URL = "https://banking-app-production-54bc.up.railway.app";
 
   useEffect(() => {
     if (!username) {
@@ -29,7 +29,7 @@ function Transactions() {
 
       const res = await fetch(url);
 
-      // 🔥 show full error clearly
+      // 🔥 Proper error handling
       if (!res.ok) {
         const text = await res.text();
         console.error("❌ API ERROR:", res.status, text);
@@ -40,8 +40,10 @@ function Transactions() {
       const data = await res.json();
       console.log("✅ API RESPONSE:", data);
 
+      // ✅ Safe extraction
       const list = Array.isArray(data?.data) ? data.data : [];
 
+      // ✅ Do NOT mutate original array
       setTransactions([...list].reverse());
 
     } catch (err) {
@@ -68,7 +70,8 @@ function Transactions() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-indigo-100 p-6">
-      
+
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">📜 All Transactions</h1>
 
@@ -80,33 +83,37 @@ function Transactions() {
         </button>
       </div>
 
+      {/* EMPTY STATE */}
       {transactions.length === 0 ? (
         <p className="text-center text-gray-500 mt-10">
           No transactions found
         </p>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-          
+
           {transactions.map((t, i) => (
             <div
               key={i}
               className="bg-white p-5 rounded-2xl shadow-md hover:shadow-xl transition"
             >
+              {/* TYPE */}
               <h3 className={`font-semibold text-lg ${getColor(t.type)}`}>
                 {t.type}
               </h3>
 
+              {/* AMOUNT */}
               <p className="text-xl font-bold mt-2">
                 ₹ {t.amount}
               </p>
 
+              {/* TRANSFER DETAILS */}
               {(t.sender || t.receiver) && (
                 <p className="text-sm text-gray-500 mt-1">
                   {t.sender || "System"} → {t.receiver || "System"}
                 </p>
               )}
 
-              {/* ✅ SAFE timestamp */}
+              {/* TIMESTAMP */}
               <p className="text-xs text-gray-400 mt-2">
                 {t.timestamp
                   ? new Date(t.timestamp).toLocaleString()
