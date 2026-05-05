@@ -6,7 +6,7 @@ This application allows users to securely manage their bank accounts, perform tr
 ---
 
 ## 🚀 Live Demo
-👉 https://your-vercel-link
+👉 https://banking-frontend-aepchrm4m-ssinghayu98s-projects.vercel.app
 
 ---
 
