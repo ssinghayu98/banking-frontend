@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-
-const API_URL = "https://banking-app-production-54bc.up.railway.app";
+import API_URL from "../api"; // ✅ USE CENTRAL CONFIG
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -20,38 +19,41 @@ function Login() {
       setLoading(true);
       setError("");
 
+      console.log("🚀 Logging in with:", { username });
+
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({
+          username: username.trim(),
+          password,
+        }),
       });
 
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        throw new Error("Invalid server response");
-      }
-
-      console.log("LOGIN RESPONSE:", data);
+      const data = await res.json();
+      console.log("✅ LOGIN RESPONSE:", data);
 
       if (!res.ok || !data?.data) {
         throw new Error(data?.message || "Invalid username or password");
       }
 
-      // Clear old session
+      // ✅ CLEAR OLD DATA
       localStorage.clear();
 
       const user = data.data;
 
+      // ✅ SAVE USERNAME (CRITICAL FIX)
       localStorage.setItem("username", user.username);
 
-      const role = user.username === "admin" ? "admin" : "user";
-      localStorage.setItem("role", role);
+      // Optional role
+      localStorage.setItem(
+        "role",
+        user.username === "admin" ? "admin" : "user"
+      );
 
-      console.log("Stored:", {
+      console.log("📦 STORED:", {
         username: localStorage.getItem("username"),
         role: localStorage.getItem("role"),
       });
@@ -59,7 +61,7 @@ function Login() {
       navigate("/dashboard");
 
     } catch (err) {
-      console.error("LOGIN ERROR:", err);
+      console.error("❌ LOGIN ERROR:", err);
       setError(err.message || "Login failed");
     } finally {
       setLoading(false);
@@ -75,9 +77,11 @@ function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-500">
       <div className="bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-2xl w-[350px] border border-white/20">
+        
         <h1 className="text-3xl font-bold text-white text-center mb-2">
           🏦 Bankify
         </h1>
+
         <p className="text-center text-gray-200 mb-6 text-sm">
           Secure Digital Banking
         </p>
@@ -120,6 +124,7 @@ function Login() {
             Signup
           </Link>
         </p>
+
       </div>
     </div>
   );

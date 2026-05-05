@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const API_URL = "https://banking-app-production-54bc.up.railway.app";
+import API_URL from "../api"; // ✅ use central config
 
 function Signup() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -17,18 +17,20 @@ function Signup() {
     setMessage("");
     setError("");
 
-    if (!username || !password) {
+    if (!username.trim() || !password) {
       return setError("Please fill all fields");
     }
 
     try {
+      setLoading(true);
+
       const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: username.trim(),
+          username: username.trim().toLowerCase(), // ✅ consistency with backend
           password,
         }),
       });
@@ -50,11 +52,14 @@ function Signup() {
       setUsername("");
       setPassword("");
 
+      // ✅ small delay then redirect
       setTimeout(() => navigate("/"), 1200);
 
     } catch (err) {
       console.error("SIGNUP ERROR:", err);
       setError(err.message || "Server error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -80,7 +85,9 @@ function Signup() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <button style={button}>Signup</button>
+          <button style={button} disabled={loading}>
+            {loading ? "Creating..." : "Signup"}
+          </button>
         </form>
 
         <p onClick={() => navigate("/")} style={link}>
@@ -94,6 +101,7 @@ function Signup() {
   );
 }
 
+// 🎨 styles (unchanged)
 const container = {
   height: "100vh",
   display: "flex",

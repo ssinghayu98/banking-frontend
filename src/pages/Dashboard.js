@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import API_URL from "../api"; // ✅ FIXED
+import API_URL from "../api"; // ✅ must export default
 
 function Dashboard() {
   const [balance, setBalance] = useState(0);
@@ -15,44 +15,57 @@ function Dashboard() {
   const username = localStorage.getItem("username");
   const role = localStorage.getItem("role");
 
-  useEffect(() => {
-    if (!username) {
-      navigate("/");
-      return;
-    }
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  // ✅ LOAD DATA (FIXED with useCallback)
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       await Promise.all([fetchBalance(), fetchTransactions()]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [username]);
 
+  useEffect(() => {
+    if (!username) {
+      navigate("/");
+      return;
+    }
+    loadData();
+  }, [loadData, navigate, username]);
+
+  // ✅ BALANCE
   const fetchBalance = async () => {
     try {
       const res = await fetch(`${API_URL}/api/user/balance?username=${username}`);
+
+      if (!res.ok) throw new Error("Failed to fetch balance");
+
       const data = await res.json();
       setBalance(data?.data ?? 0);
+
     } catch (err) {
       console.error("Balance error:", err);
     }
   };
 
+  // ✅ TRANSACTIONS
   const fetchTransactions = async () => {
     try {
       const res = await fetch(`${API_URL}/api/user/transactions?username=${username}`);
+
+      if (!res.ok) throw new Error("Failed to fetch transactions");
+
       const data = await res.json();
       const list = Array.isArray(data?.data) ? data.data : [];
+
       setTransactions(list.slice(-5).reverse());
+
     } catch (err) {
       console.error("Transaction error:", err);
     }
   };
 
+  // ✅ DEPOSIT
   const deposit = async () => {
     if (!amount) return;
 
@@ -61,22 +74,16 @@ function Dashboard() {
     try {
       const res = await fetch(`${API_URL}/api/user/deposit`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username, // ✅ IMPORTANT
+          username,
           amount: Number(amount),
         }),
       });
 
       const data = await res.json();
 
-      console.log("DEPOSIT RESPONSE:", data);
-
-      if (!res.ok) {
-        throw new Error(data?.message || "Deposit failed");
-      }
+      if (!res.ok) throw new Error(data?.message || "Deposit failed");
 
       setAmount("");
       await loadData();
@@ -89,6 +96,7 @@ function Dashboard() {
     }
   };
 
+  // ✅ WITHDRAW
   const withdraw = async () => {
     if (!amount) return;
 
@@ -97,9 +105,7 @@ function Dashboard() {
     try {
       const res = await fetch(`${API_URL}/api/user/withdraw`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username,
           amount: Number(amount),
@@ -108,7 +114,7 @@ function Dashboard() {
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data?.message);
+      if (!res.ok) throw new Error(data?.message || "Withdraw failed");
 
       setAmount("");
       await loadData();
@@ -121,6 +127,7 @@ function Dashboard() {
     }
   };
 
+  // ✅ TRANSFER
   const transfer = async () => {
     if (!transferAmount || !transferTo) return;
 
@@ -129,9 +136,7 @@ function Dashboard() {
     try {
       const res = await fetch(`${API_URL}/api/user/transfer`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sender: username,
           receiver: transferTo,
@@ -141,7 +146,7 @@ function Dashboard() {
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data?.message);
+      if (!res.ok) throw new Error(data?.message || "Transfer failed");
 
       setTransferAmount("");
       setTransferTo("");
@@ -212,13 +217,11 @@ function Dashboard() {
           />
 
           <div className="flex gap-4">
-            <button onClick={deposit}
-              className="flex-1 bg-green-500 py-2 rounded">
+            <button onClick={deposit} className="flex-1 bg-green-500 py-2 rounded">
               Deposit
             </button>
 
-            <button onClick={withdraw}
-              className="flex-1 bg-yellow-500 py-2 rounded">
+            <button onClick={withdraw} className="flex-1 bg-yellow-500 py-2 rounded">
               Withdraw
             </button>
           </div>

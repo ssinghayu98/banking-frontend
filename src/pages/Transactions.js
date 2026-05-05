@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API_URL from "../api"; // ✅ FIX: central API
 
 function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -8,9 +9,6 @@ function Transactions() {
   const navigate = useNavigate();
   const username = localStorage.getItem("username");
 
-  // ✅ FINAL CORRECT BACKEND URL (FROM YOUR RAILWAY)
-  const BASE_URL = "https://banking-app-production-54bc.up.railway.app";
-
   useEffect(() => {
     if (!username) {
       navigate("/");
@@ -18,18 +16,17 @@ function Transactions() {
     }
 
     fetchTransactions();
-  }, []);
+  }, [username, navigate]); // ✅ FIX warning
 
   const fetchTransactions = async () => {
     try {
       setLoading(true);
 
-      const url = `${BASE_URL}/api/user/transactions?username=${username}`;
+      const url = `${API_URL}/api/user/transactions?username=${username}`;
       console.log("🚀 Calling API:", url);
 
       const res = await fetch(url);
 
-      // 🔥 Proper error handling
       if (!res.ok) {
         const text = await res.text();
         console.error("❌ API ERROR:", res.status, text);
@@ -40,10 +37,8 @@ function Transactions() {
       const data = await res.json();
       console.log("✅ API RESPONSE:", data);
 
-      // ✅ Safe extraction
       const list = Array.isArray(data?.data) ? data.data : [];
 
-      // ✅ Do NOT mutate original array
       setTransactions([...list].reverse());
 
     } catch (err) {
