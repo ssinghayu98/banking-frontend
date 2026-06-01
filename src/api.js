@@ -1,3 +1,3 @@
-const API_URL = "https://banking-app-production-54bc.up.railway.app";
+const API_URL = "https://banking-app-j821.onrender.com";
 
 export default API_URL;
